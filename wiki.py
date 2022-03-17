@@ -1,4 +1,5 @@
 import abc
+from cgitb import html
 from tracemalloc import start
 from turtle import clear
 from urllib.request import urlopen
@@ -68,7 +69,18 @@ async def wiki(ctx, *startingWikiPage):
     startingWikiPage = 'https://en.wikipedia.org/wiki/' + str(startingWikiPage)
 
     page = urlopen(startingWikiPage)
+
+    soup = BeautifulSoup(page, "lxml")
+
+    mydivs = soup.find_all("div", {"class": "mw-parser-output"})
+
+
+    links = []
+    for link in soup.findAll('a'):
+        links.append(link.get('href'))
+        await ctx.send(link)
     
+    str(links)
 
     # targetPage = 'https://en.wikipedia.org/wiki/Philosophy'
 
@@ -77,7 +89,7 @@ async def wiki(ctx, *startingWikiPage):
     # url = 'https://en.wikipedia.org/wiki/' + startingWikiPage 
 
     # Send a message in chat
-    await ctx.send(startingWikiPage)
+    
 
 #Run Token
 #client.run('')

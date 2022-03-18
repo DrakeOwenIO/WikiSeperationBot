@@ -23,6 +23,27 @@ from discord.message import Message
 client = commands.Bot(command_prefix = '-', case_insensitive=True, help_command=None)
 client.launch_time = datetime.utcnow()
 
+# This function is used in the wiki command
+# Its find the first link on a wiki page and confirms that it 
+# isn't in ()
+def is_first(pLink):
+    strBuilder = ""
+    strTemp = ""
+    counter1 = 0
+    counter2 = 0
+    for sibling in pLink.previous_siblings:
+        thing = type(sibling)
+        if str(thing) == "<class 'bs4.element.NavigableString'>":
+            strTemp = strBuilder
+            strBuilder = sibling + strTemp
+    counter1 = strBuilder.count('(')
+    counter2 = strBuilder.count(')')
+    if counter1 > counter2:
+        return False
+    else:
+        return True 
+
+
 # Set the play status
 @client.event
 async def on_ready():
@@ -72,26 +93,32 @@ async def wiki(ctx, *startingWikiPage):
 
     soup = BeautifulSoup(page, "lxml")
 
-    # mydivs = soup.findAll("div", {"class": "mw-parser-output"})
+    found_it = False
+    firstLink = None
 
-    # print(mydivs)
+    for childNode in soup.findAll("div", {"class": "mw-parser-output"}):
+        for paragraph in soup.findAll('p'):
+            for link in paragraph.findAll('a',recursive=False):
+                if is_first(link) == True:
+                    found_it = True
+                    firstLink = link
+                    break
+            if found_it == True:
+                break
+        if found_it == True:
+            break
 
-    links = []
-    # for link in soup.findAll('a'):
-    for link in soup.findAll("div", {"class": "mw-parser-output"}):
-        for link in soup.findAll('p'):
-            links.append(link.get('href'))
-            # await ctx.send(link)
-            print(link.encode("utf-8"))
+    # print(firstLink['title'])
+
+
+
+    await ctx.send(firstLink['title'])
 
 
     # targetPage = 'https://en.wikipedia.org/wiki/Philosophy'
 
-    # URLLib3 Connection
-    # http = urllib3.PoolManager()
-    # url = 'https://en.wikipedia.org/wiki/' + startingWikiPage 
 
-    
+
 
 #Run Token
 client.run('')

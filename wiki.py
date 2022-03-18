@@ -117,8 +117,5 @@ async def wiki(ctx, *startingWikiPage):
         # send final message
         await ctx.send("There are " + str(seperationCounter) + " degrees of seperation between " + '"' + ogPageTitle + '"' + " and Philosophy.")
     
-
-
-
 #Run Token
 client.run('')

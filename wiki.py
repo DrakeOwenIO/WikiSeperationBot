@@ -9,9 +9,14 @@ from urllib.request import urlopen
 client = commands.Bot(command_prefix = '-', case_insensitive=True, help_command=None)
 client.launch_time = datetime.utcnow()
 
-# This function is used in the wiki command
-# It finds the first link on a wiki page and confirms that it 
-# isn't in ()
+# Set the play status
+@client.event
+async def on_ready():
+    # Setting `Playing ` status
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Wikipedia"))
+    print('Bot is ready.')
+
+# Checks if a link is in parentheses
 def is_first(pLink):
     strBuilder = ""
     strTemp = ""
@@ -29,56 +34,14 @@ def is_first(pLink):
     else:
         return True 
 
+# Test if a page has already been opened
+def is_in_list(list, testValue):
+    for i in list:
+        if (i == testValue):
+            return True
 
-# Set the play status
-@client.event
-async def on_ready():
-    # Setting `Playing ` status
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Wikipedia"))
-    print('Bot is ready.')
-
-# Uptime command
-@client.command()
-async def uptime(ctx):
-    delta_uptime = datetime.utcnow() - client.launch_time #Calculates Bot Uptime
-    hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
-    minutes, seconds = divmod(remainder, 60)
-    days, hours = divmod(hours, 24)
-    await ctx.send("Seperation Bot has been running for " + f"{days}d {hours}h {minutes}m")
-
-# Delete messages
-@client.command(pass_context = True)
-async def delete(ctx, number):
-    number = int(number) #Converting the amount of messages to delete to an integer
-    await ctx.send("Deleting...")
-    await ctx.channel.purge(limit = number + 2)
-
-# Say command
-@client.command(pass_context = True)
-async def say(ctx, *whatYouWantBotToSay):
-
-    await ctx.channel.purge(limit = 1)
-
-    response = ' '.join(whatYouWantBotToSay)
-
-    await ctx.send(response)
-
-# Wiki
-@client.command(pass_context = True)
-
-# Note: * is used to make var a tuple so that it reads whitespace
-async def wiki(ctx, *startingWikiPage): 
-
-    # Join tuple with underscore
-    startingWikiPage = ('_'.join(str(x) for x in startingWikiPage))
-
-    # Create Wiki page
-    startingWikiPage = 'https://en.wikipedia.org/wiki/' + str(startingWikiPage)
-
-    page = urlopen(startingWikiPage)
-
-    soup = BeautifulSoup(page, "lxml")
-
+# Finds first link
+def find_link(soup):
     found_it = False
     firstLink = None
 
@@ -93,36 +56,67 @@ async def wiki(ctx, *startingWikiPage):
                 break
         if found_it == True:
             break
+    
+    return firstLink
 
+# Wiki
+@client.command(pass_context = True)
+
+# Note: * is used to make var a tuple so that it reads whitespace
+async def wiki(ctx, *startingWikiPage): 
+
+    # Initialize counter, starting page title and pageList
+    seperationCounter = 0
+    ogPageTitle = " ".join([str(s) for s in list(startingWikiPage)])
+    pageList = []
+    infiniteLoop = False
+
+    # Join tuple with underscore
+    startingWikiPage = ('_'.join(str(x) for x in startingWikiPage))
+
+    # Create first wiki page
+    startingWikiPage = 'https://en.wikipedia.org/wiki/' + str(startingWikiPage)
+
+    # Open the page
+    page = urlopen(startingWikiPage)
+    soup = BeautifulSoup(page, "lxml")
+
+    # Find the first link in the page
+    firstLink = find_link(soup)
+    pageList.append(firstLink['title'])
+
+    # Send page title and update counter
     await ctx.send(firstLink['title'])
-    firstLinkURL = 'https://en.wikipedia.org/wiki/' + firstLink['title']
+    seperationCounter += 1
+
+    firstLinkURL = 'https://en.wikipedia.org' + firstLink['href']
 
     while firstLink['title'] != 'Philosophy':
+        
+        # open the page
         page = urlopen(firstLinkURL)
-
         soup = BeautifulSoup(page, "lxml")
 
-        found_it = False
-        firstLink = None
-
-        for childNode in soup.findAll("div", {"class": "mw-parser-output"}):
-            for paragraph in soup.findAll('p'):
-                for link in paragraph.findAll('a',recursive=False):
-                    if is_first(link) == True:
-                        found_it = True
-                        firstLink = link
-                        break
-                if found_it == True:
-                    break
-            if found_it == True:
-                break
+        # Find the first link on the page
+        firstLink = find_link(soup)
         
-        firstLinkURL = 'https://en.wikipedia.org' + firstLink['href']
-        await ctx.send(firstLink['title'])
+        # Test if its an infinite loop
+        if (is_in_list(pageList, firstLink['title']) == True):
+            await ctx.send("This wiki page is not related to Philosophy")
+            infiniteLoop = True
+            break
+        else:
+            # Add to the counter, update the link, and send the page
+            seperationCounter += 1
+            pageList.append(firstLink['title'])
+            firstLinkURL = 'https://en.wikipedia.org' + firstLink['href']
+            await ctx.send(firstLink['title'])
 
-
-
-    # targetPage = 'https://en.wikipedia.org/wiki/Philosophy'
+        
+    if(infiniteLoop == False):
+        # send final message
+        await ctx.send("There are " + str(seperationCounter) + " degrees of seperation between " + '"' + ogPageTitle + '"' + " and Philosophy.")
+    
 
 
 

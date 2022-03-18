@@ -1,3 +1,4 @@
+from ast import While
 import discord
 from datetime import datetime
 from bs4 import BeautifulSoup
@@ -9,7 +10,7 @@ client = commands.Bot(command_prefix = '-', case_insensitive=True, help_command=
 client.launch_time = datetime.utcnow()
 
 # This function is used in the wiki command
-# Its find the first link on a wiki page and confirms that it 
+# It finds the first link on a wiki page and confirms that it 
 # isn't in ()
 def is_first(pLink):
     strBuilder = ""
@@ -93,15 +94,35 @@ async def wiki(ctx, *startingWikiPage):
         if found_it == True:
             break
 
-    # print(firstLink['title'])
-
-
-
     await ctx.send(firstLink['title'])
+    firstLinkURL = 'https://en.wikipedia.org/wiki/' + firstLink['title']
+
+    while firstLink['title'] != 'Philosophy':
+        page = urlopen(firstLinkURL)
+
+        soup = BeautifulSoup(page, "lxml")
+
+        found_it = False
+        firstLink = None
+
+        for childNode in soup.findAll("div", {"class": "mw-parser-output"}):
+            for paragraph in soup.findAll('p'):
+                for link in paragraph.findAll('a',recursive=False):
+                    if is_first(link) == True:
+                        found_it = True
+                        firstLink = link
+                        break
+                if found_it == True:
+                    break
+            if found_it == True:
+                break
+        
+        firstLinkURL = 'https://en.wikipedia.org' + firstLink['href']
+        await ctx.send(firstLink['title'])
+
 
 
     # targetPage = 'https://en.wikipedia.org/wiki/Philosophy'
-
 
 
 

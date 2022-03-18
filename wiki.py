@@ -1,23 +1,8 @@
-import abc
-from cgitb import html
-from tracemalloc import start
-from turtle import clear
-from urllib.request import urlopen
 import discord
-import asyncio
-import urllib3
-import string
-from datetime import datetime, date, timedelta
-from time import timezone
+from datetime import datetime
 from bs4 import BeautifulSoup
-from discord import message
-from discord import colour
-from discord import channel
-from discord.channel import TextChannel
-from discord.ext import commands, tasks
-from discord.ext.commands import Bot
-from discord.abc import Messageable
-from discord.message import Message
+from discord.ext import commands
+from urllib.request import urlopen
 
 # Command prefix
 client = commands.Bot(command_prefix = '-', case_insensitive=True, help_command=None)

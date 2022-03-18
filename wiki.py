@@ -72,15 +72,18 @@ async def wiki(ctx, *startingWikiPage):
 
     soup = BeautifulSoup(page, "lxml")
 
-    mydivs = soup.find_all("div", {"class": "mw-parser-output"})
+    # mydivs = soup.findAll("div", {"class": "mw-parser-output"})
 
+    # print(mydivs)
 
     links = []
-    for link in soup.findAll('a'):
-        links.append(link.get('href'))
-        await ctx.send(link)
-    
-    str(links)
+    # for link in soup.findAll('a'):
+    for link in soup.findAll("div", {"class": "mw-parser-output"}):
+        for link in soup.findAll('p'):
+            links.append(link.get('href'))
+            # await ctx.send(link)
+            print(link.encode("utf-8"))
+
 
     # targetPage = 'https://en.wikipedia.org/wiki/Philosophy'
 
@@ -88,8 +91,7 @@ async def wiki(ctx, *startingWikiPage):
     # http = urllib3.PoolManager()
     # url = 'https://en.wikipedia.org/wiki/' + startingWikiPage 
 
-    # Send a message in chat
     
 
 #Run Token
-#client.run('')
+client.run('')

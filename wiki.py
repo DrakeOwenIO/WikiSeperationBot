@@ -91,13 +91,12 @@ async def wiki(ctx, *startingWikiPage):
         firstLink = find_link(soup)
         pageList.append(firstLink['title'])
 
+        # After finding the link, add to counter
         seperationCounter += 1
 
+        # create the embed to be sent, and add the first page
         embed=discord.Embed(title="Degrees of Seperation", description="Degrees of seperation between " + '"' + ogPageTitle + '"' + " and Philosophy", color=0xC7C8CA)
         embed.add_field(name='#' + str(seperationCounter) + ': ' + firstLink['title'], value='https://en.wikipedia.org' + firstLink['href'], inline=False)
-
-        # Send page title and update counter
-        # await ctx.send(firstLink['title'])
 
         firstLinkURL = 'https://en.wikipedia.org' + firstLink['href']
 
@@ -111,34 +110,34 @@ async def wiki(ctx, *startingWikiPage):
             firstLink = find_link(soup)
             
             # Test if its an infinite loop
+            # If it is, break out of loop and let the user know
             if (is_in_list(pageList, firstLink['title']) == True):
-                await ctx.send("This wiki page is not related to Philosophy")
+                await ctx.send('"' + ogPageTitle + '"' + " is not related to Philosophy.")
                 infiniteLoop = True
                 break
             else:
-                # Add to the counter, update the link, and send the page
+                # Add to the counter, update the link, add page to embed
                 seperationCounter += 1
                 pageList.append(firstLink['title'])
                 firstLinkURL = 'https://en.wikipedia.org' + firstLink['href']
-                # await ctx.send(firstLink['title'])
                 embed.add_field(name='#' + str(seperationCounter) + ': ' + firstLink['title'], value='https://en.wikipedia.org' + firstLink['href'], inline=False)
 
-            
         if(infiniteLoop == False):
-            # send final message
+            # Add the result to the embed
             embed.add_field(name="Result", value="There are " + str(seperationCounter) + " degrees of seperation between " + '"' + ogPageTitle + '"' + " and Philosophy.", inline=False)
             
-           # await ctx.channel.purge(limit = 1)
+            # If theres more than 25 fields the embed won't send
+            # If theres more than 25, it sends a shortened embed
             if(seperationCounter > 25):
                 embed2=discord.Embed(title="Degrees of Seperation", description="There appears to be too many degrees of seperation to send the full embed.", color=0xC7C8CA)
                 embed2.add_field(name="Result", value="There are " + str(seperationCounter) + " degrees of seperation between " + '"' + ogPageTitle + '"' + " and Philosophy.")
                 await ctx.send(embed=embed2)
             else:
-                await ctx.send(embed=embed)
-            # await ctx.send("There are " + str(seperationCounter) + " degrees of seperation between " + '"' + ogPageTitle + '"' + " and Philosophy.")        
+                await ctx.send(embed=embed) # Full embed    
 
+    # if the page doesn't exist, tell the user 
     except:
         await ctx.send("Sorry, this wiki page does not exist")
 
 #Run Token
-client.run('')
+client.run('') #remove run token before commiting!
